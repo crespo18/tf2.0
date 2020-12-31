@@ -90,3 +90,64 @@ pred_data len:  87525
 predict_result.shape:  (87525, 2)
 
 
+
+3、sentence_lstm_embedding_tf.py
+
+与上一个模型相比，唯一区别的就是model的构造有所区别
+
+def model(self, train_sequences, train_labels, word_num, embedding_dim):
+
+        model = tf.keras.Sequential()
+        
+        model.add(layers.Embedding(word_num, embedding_dim))
+        #model.add(layers.GlobalAveragePooling1D())
+        model.add(layers.Bidirectional(layers.LSTM(64)))
+        model.add(layers.Dense(128, activation=tf.nn.relu))
+        model.add(layers.Dense(1))
+        print(model.summary())
+
+        model.compile(optimizer=tf.keras.optimizers.Adam(1e-4), loss=tf.keras.losses.BinaryCrossentropy(from_logits=True), metrics=['accuracy'])
+        model.fit(train_sequences, train_labels, batch_size = 512, epochs = 5)
+
+        return model
+
+执行输出情况：
+Model: "sequential"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #
+=================================================================
+embedding (Embedding)        (None, None, 100)         1000000
+_________________________________________________________________
+bidirectional (Bidirectional (None, 128)               84480
+_________________________________________________________________
+dense (Dense)                (None, 128)               16512
+_________________________________________________________________
+dense_1 (Dense)              (None, 1)                 129
+=================================================================
+Total params: 1,101,121
+Trainable params: 1,101,121
+Non-trainable params: 0
+_________________________________________________________________
+None
+
+Epoch 1/5
+
+138101/138101 [==============================] - 257s 2ms/sample - loss: 0.1938 - accuracy: 0.9950
+
+Epoch 2/5
+
+138101/138101 [==============================] - 251s 2ms/sample - loss: 0.0226 - accuracy: 0.9950
+
+Epoch 3/5
+
+138101/138101 [==============================] - 252s 2ms/sample - loss: 0.0195 - accuracy: 0.9951
+
+Epoch 4/5
+
+138101/138101 [==============================] - 252s 2ms/sample - loss: 0.0189 - accuracy: 0.9964
+
+Epoch 5/5
+138101/138101 [==============================] - 253s 2ms/sample - loss: 0.0115 - accuracy: 0.9972
+ 
+
+
