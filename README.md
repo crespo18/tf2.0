@@ -98,18 +98,17 @@ predict_result.shape:  (87525, 2)
 def model(self, train_sequences, train_labels, word_num, embedding_dim):
 
         model = tf.keras.Sequential()
-        
         model.add(layers.Embedding(word_num, embedding_dim))
         #model.add(layers.GlobalAveragePooling1D())
         model.add(layers.Bidirectional(layers.LSTM(64)))
         model.add(layers.Dense(128, activation=tf.nn.relu))
-        model.add(layers.Dense(1))
+        model.add(layers.Dense(2, activation='softmax'))
+        #model.add(layers.Dense(1))
         print(model.summary())
 
-        model.compile(optimizer=tf.keras.optimizers.Adam(1e-4), loss=tf.keras.losses.BinaryCrossentropy(from_logits=True), metrics=['accuracy'])
-        model.fit(train_sequences, train_labels, batch_size = 512, epochs = 5)
-
-        return model
+        model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+        #model.compile(optimizer=tf.keras.optimizers.Adam(1e-4), loss=tf.keras.losses.BinaryCrossentropy(from_logits=True), metrics=['accuracy'])
+        model.fit(train_sequences, train_labels, batch_size = 512, epochs = 3)
 
 执行输出情况：
 Model: "sequential"
