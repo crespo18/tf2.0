@@ -87,6 +87,8 @@ class DenseEmbeddingTag:
                 idx += 1
             fp.close()
         train_sequences = preprocessing.sequence.pad_sequences(train_data, max_len)
+        
+        #这里train_labels的shape是（None，1），不需要转换为onehot类型
         return ([train_data,train_labels, train_sequences])
  
     #加载需要预测的数据，
@@ -136,8 +138,8 @@ class DenseEmbeddingTag:
         model.add(layers.Embedding(word_num, embedding_dim))
         model.add(layers.GlobalAveragePooling1D())
         model.add(layers.Dense(128, activation=tf.nn.relu))
-        model.add(layers.Dense(2, activation='softmax'))                        #注意，这里是softmax层
-        #model.add(layers.Dense(1))                             
+        model.add(layers.Dense(2, activation='softmax'))                        #注意，这里是softmax层，这种情况predict出来的代表两列代表0和1出现的概率，都在[0,1]的范围
+        #model.add(layers.Dense(2))                                             #激活函数可以不用选softmax , 这种情况predict的数据格式预测出来例如：1.297   -0.175
         print(model.summary())
 
         model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
