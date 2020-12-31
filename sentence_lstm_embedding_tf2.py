@@ -123,22 +123,22 @@ class DenseEmbeddingTag:
         need_pred_sequences = preprocessing.sequence.pad_sequences(need_pred_data[0:idx], max_len)
         print('pred_data len: ', len(need_pred_sequences))
         return([need_pred_apk, need_pred_desc, need_pred_sequences])
-    
-
 
     def model(self, train_sequences, train_labels, word_num, embedding_dim):
         model = tf.keras.Sequential()
         model.add(layers.Embedding(word_num, embedding_dim))
+        #model.add(layers.GlobalAveragePooling1D())
         model.add(layers.Bidirectional(layers.LSTM(64)))
         model.add(layers.Dense(128, activation=tf.nn.relu))
-        model.add(layers.Dense(1))                                    #不需要softmax层
+        model.add(layers.Dense(2, activation='softmax'))                                    #最后一层是softmax层
         print(model.summary())
 
-        model.compile(optimizer=tf.keras.optimizers.Adam(1e-4), loss=tf.keras.losses.BinaryCrossentropy(from_logits=True), metrics=['accuracy'])  #loss函数与softmax不同
-        model.fit(train_sequences, train_labels, batch_size = 512, epochs = 5)
+        model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])       #对应的softmax的loss函数选择'sparse_categorical_crossentropy'
+        
+        #model.compile(optimizer=tf.keras.optimizers.Adam(1e-4), loss=tf.keras.losses.BinaryCrossentropy(from_logits=True), metrics=['accuracy'])
+        model.fit(train_sequences, train_labels, batch_size = 512, epochs = 3)
 
-        return model
-
+   
     def predict_new(self, model, need_pred_sequences):
         pred_result = model.predict(need_pred_sequences)
         #print('predict_result: ', pred_result, pred_result.shape)
