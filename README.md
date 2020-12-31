@@ -273,3 +273,108 @@ pred_data len:  87525
 
 predict_result.shape:  (87525, 2)
 
+
+
+9、textRCnn_embedding.py
+
+与RNN以及CNN不同的地方在于，有三个input，同时进行fit训练拟合是，输入的train_x是train_sequences_new = [train_sequences, train_sequences, train_sequences]是三个相同的输入
+
+def text_rcnn_model(self, train_sequences, train_labels, word_num, embedding_dim, max_len):
+        input_current = Input((max_len,))
+        input_left = Input((max_len,))
+        input_right = Input((max_len,))
+        embedding_current = layers.Embedding(word_num, embedding_dim, input_length=max_line_len)(input_current)
+        embedding_left = layers.Embedding(word_num, embedding_dim, input_length=max_line_len)(input_left)
+        embedding_right = layers.Embedding(word_num, embedding_dim, input_length=max_line_len)(input_right)
+
+        x_left = layers.SimpleRNN(128, return_sequences=True)(embedding_left)
+        x_right = layers.SimpleRNN(128, return_sequences=True,go_backwards=True)(embedding_right)
+        x_right = layers.Lambda(lambda x: keras.backend.reverse(x, axes=1))(x_right)
+        x = layers.Concatenate(axis=2)([x_left, embedding_current, x_right])
+        x = layers.GlobalMaxPooling1D()(x)
+
+        output = layers.Dense(2, activation='softmax')(x)
+        model = Model(inputs = [input_current, input_left, input_right], outputs = output)
+        print(model.summary())
+
+        model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+ 
+        train_sequences_new = [train_sequences, train_sequences, train_sequences]
+        
+        model.fit(train_sequences_new, train_labels, batch_size = 512, epochs = 5)
+        return(model)
+
+预测predict时也是类似的三个输入：
+def predict_new(self, model, need_pred_sequences):
+        need_pred_sequences = [need_pred_sequences, need_pred_sequences, need_pred_sequences]
+        pred_result = model.predict(need_pred_sequences)
+        #print('predict_result: ', pred_result, pred_result.shape)
+        print('predict_result.shape: ', pred_result.shape)
+        return(pred_result)
+
+执行输出情况：
+Model: "model"
+__________________________________________________________________________________________________
+Layer (type)                    Output Shape         Param #     Connected to
+
+==================================================================================================
+input_3 (InputLayer)            [(None, 256)]        0
+
+__________________________________________________________________________________________________
+input_2 (InputLayer)            [(None, 256)]        0
+
+__________________________________________________________________________________________________
+embedding_2 (Embedding)         (None, 256, 100)     1000000     input_3[0][0]
+
+__________________________________________________________________________________________________
+embedding_1 (Embedding)         (None, 256, 100)     1000000     input_2[0][0]
+
+__________________________________________________________________________________________________
+input_1 (InputLayer)            [(None, 256)]        0
+
+__________________________________________________________________________________________________
+simple_rnn_1 (SimpleRNN)        (None, 256, 128)     29312       embedding_2[0][0]
+
+__________________________________________________________________________________________________
+simple_rnn (SimpleRNN)          (None, 256, 128)     29312       embedding_1[0][0]
+
+__________________________________________________________________________________________________
+embedding (Embedding)           (None, 256, 100)     1000000     input_1[0][0]
+
+__________________________________________________________________________________________________
+lambda (Lambda)                 (None, 256, 128)     0           simple_rnn_1[0][0]
+
+__________________________________________________________________________________________________
+concatenate (Concatenate)       (None, 256, 356)     0         
+simple_rnn[0][0]
+                                                                 embedding[0][0]
+                                                                 
+                                                                 lambda[0][0]
+                                                                 
+__________________________________________________________________________________________________
+global_max_pooling1d (GlobalMax (None, 356)          0           concatenate[0][0]
+
+__________________________________________________________________________________________________
+dense (Dense)                   (None, 2)            714         global_max_pooling1d[0][0]
+
+==================================================================================================
+Total params: 3,059,338
+
+Trainable params: 3,059,338
+
+Non-trainable params: 0
+
+__________________________________________________________________________________________________
+None
+Epoch 1/5
+
+138101/138101 [==============================] - 200s 1ms/sample - loss: 0.0309 - accuracy: 0.9940
+
+Epoch 2/5
+
+138101/138101 [==============================] - 196s 1ms/sample - loss: 0.0078 - accuracy: 0.9975
+
+Epoch 3/5
+
+114176/138101 [=======================>......] - ETA: 33s - loss: 0.0046 - accuracy: 0.9985
+
