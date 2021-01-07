@@ -267,8 +267,8 @@ if __name__ == '__main__':
     #train_labels = tf.keras.utils.to_categorical(train_labels)
     #train_labels = pd.get_dummies(train_labels)                                                                      #转换为onehot类型，看情况用
     model = app_name_tag.text_self_attention_model(train_sequences, train_labels,word_num, embedding_dim, max_len)
-    #need_pred_apk,need_pred_desc,need_pred_sequences = app_name_tag.load_need_pred_data("../need_pred_data.txt", word_index_dict, word_num, max_len)
-    #predict_result = app_name_tag.predict_new(model, need_pred_sequences)
-    #app_name_tag.save_predict_result("predict_result.txt", need_pred_apk, need_pred_desc, predict_result)
+    need_pred_apk,need_pred_desc,need_pred_sequences = app_name_tag.load_need_pred_data("../need_pred_data.txt", word_index_dict, word_num, max_len)
+    predict_result = app_name_tag.predict_new(model, need_pred_sequences)
+    app_name_tag.save_predict_result("predict_result.txt", need_pred_apk, need_pred_desc, predict_result)
 
 
