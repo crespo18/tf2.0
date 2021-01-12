@@ -416,4 +416,32 @@ Epoch 4/5
 Epoch 5/5
 138101/138101 [==============================] - 158s 1ms/sample - loss: 0.0041 - accuracy: 0.9987
 
+10、textBiLSTM_Attention_tf2.py的网络情况
+
+attention __init__, step_dim:  256
+attention build input_shape:
+ 3 (None, 256, 256)
+input_shape[-1]:  256
+attention call x.shape:  (None, 256, 256) features_dim:  256 step_dim:  256
+self.W.shape:  (256,) keras.backend.reshape(self.W, (features_dim, 1)).shape:  (256, 1)
+keras.backend.reshape(x,(-1,features_dim).shape):  (None, 256)
+Model: "model"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #
+=================================================================
+input_1 (InputLayer)         [(None, 256)]             0
+_________________________________________________________________
+embedding (Embedding)        (None, 256, 100)          1000000
+_________________________________________________________________
+bidirectional (Bidirectional (None, 256, 256)          234496
+_________________________________________________________________
+attention (Attention)        (None, 256)               256
+_________________________________________________________________
+dense (Dense)                (None, 2)                 514
+=================================================================
+Total params: 1,235,266
+Trainable params: 1,235,266
+Non-trainable params: 0
+_________________________________________________________________
+None
 
