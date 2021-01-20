@@ -132,7 +132,7 @@ class DenseEmbeddingTag:
         print('pred_data len: ', len(need_pred_sequences))
         return([need_pred_apk, need_pred_desc, need_pred_sequences])
 
-    #构建CNN模型，第一层就是embedding层，实际上就是一个全连接层，把一个256长度的句子embedding为一个embedding_dim长度（本文用的是100）的数组，接着再进行CNN网络训练
+    #构建CNN模型，第一层就是embedding层，实际上就是一个全连接层，把一个字embedding为一个embedding_dim长度（本文用的是100）的数组（一个句子有256个字），接着再进行CNN网络训练
     def model(self, train_sequences, train_labels, word_num, embedding_dim):
         model = tf.keras.Sequential()
         model.add(layers.Embedding(word_num, embedding_dim))
@@ -145,10 +145,17 @@ class DenseEmbeddingTag:
         model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
         model.fit(train_sequences, train_labels, batch_size = 512, epochs = 10)
 
+        #模型保存
+        model.save('MODEL_FILE/dense_embedding.model')
         return model
 
     def predict_new(self, model, need_pred_sequences):
+        #也可以利用模型加载的方式
+        #model = tf.keras.models.load_model('MODEL_FILE/dense_embedding.model')
+        
         pred_result = model.predict(need_pred_sequences)
+        
+        
         #print('predict_result: ', pred_result, pred_result.shape)
         print('predict_result.shape: ', pred_result.shape)
         return(pred_result)
