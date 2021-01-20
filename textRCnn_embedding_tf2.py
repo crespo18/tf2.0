@@ -125,7 +125,7 @@ class DenseEmbeddingTag:
         print('pred_data len: ', len(need_pred_sequences))
         return([need_pred_apk, need_pred_desc, need_pred_sequences])
    
-    def text_rcnn_model(self, train_sequences, train_labels, word_num, embedding_dim, max_len):
+    def text_rcnn_model(self, train_sequences, train_labels, word_num, embedding_dim, max_len, model_file):
         input_current = Input((max_len,))
         input_left = Input((max_len,))
         input_right = Input((max_len,))
@@ -148,8 +148,17 @@ class DenseEmbeddingTag:
         train_sequences_new = [train_sequences, train_sequences, train_sequences]
         
         model.fit(train_sequences_new, train_labels, batch_size = 512, epochs = 5)
+        
+        #保存模型
+        model.save(model_file)
         return(model)
 
+    def predict_with_model_file(self, model_file, need_pred_sequences):
+        model = tf.keras.model.load_model(model_file)
+        need_pred_sequences = [need_pred_sequences, need_pred_sequences, need_pred_sequences]
+        pred_result = model.predict(need_pred_sequences)
+        print('predict_result.shape: ', pred_result.shape)
+        return(pred_result)
 
     def predict_new(self, model, need_pred_sequences):
         need_pred_sequences = [need_pred_sequences, need_pred_sequences, need_pred_sequences]
@@ -203,12 +212,14 @@ if __name__ == '__main__':
     embedding_dim = 100
     max_len = 256
     max_line_len = 1000000
+    model_file = 'text_rcnn.model'
     sample_num = black_num + white_num
     train_data,train_labels,train_sequences = app_name_tag.encode_train_data("../train_data.txt", sample_num, word_index_dict, word_num, max_len)
     app_name_tag.print_data(train_data, train_labels, train_sequences)
     model = app_name_tag.text_rcnn_model(train_sequences, train_labels,word_num, embedding_dim, max_len)
     #model = app_name_tag.model(train_sequences, train_labels, word_num, embedding_dim) 
     need_pred_apk,need_pred_desc,need_pred_sequences = app_name_tag.load_need_pred_data("../need_pred_data.txt", word_index_dict, word_num, max_len)
+    #predict_result = app_name_tag.predict_with_model_file(model_file, need_pred_sequences)
     predict_result = app_name_tag.predict_new(model, need_pred_sequences)
     app_name_tag.save_predict_result("predict_result.txt", need_pred_apk, need_pred_desc, predict_result)
 
