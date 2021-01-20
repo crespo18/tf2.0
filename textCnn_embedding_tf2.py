@@ -128,7 +128,7 @@ class DenseEmbeddingTag:
    
    
     #embedding_dim是embedding之后的维度，本文是100，max_len是input层的数据维度，本文是256，也就是把256的维度embedding到100个维度中
-    def text_cnn_model(self, train_sequences, train_labels, word_num, embedding_dim, max_len):
+    def text_cnn_model(self, train_sequences, train_labels, word_num, embedding_dim, max_len, model_file):
         input = Input((max_len,))
         embedding = layers.Embedding(word_num, embedding_dim, input_length=max_len)(input)
         convs = []
@@ -143,8 +143,17 @@ class DenseEmbeddingTag:
 
         model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
         model.fit(train_sequences, train_labels, batch_size = 512, epochs = 5)
+        
+        #保存模型
+        model.save(model_file)
         return(model)
 
+    #利用加载模型的方式来predict
+    def predict_with_model_file(self, model_file, need_pred_sequences):
+        model = tf.keras.models.load_model(model_file)
+        pred_result = model.predict(need_pred_sequences)
+        print('predict_result.shape: ', pred_result.shape)
+        return(pred_result)
 
     def predict_new(self, model, need_pred_sequences):
         pred_result = model.predict(need_pred_sequences)
@@ -197,11 +206,13 @@ if __name__ == '__main__':
     embedding_dim = 100
     max_len = 256
     max_line_len = 1000000
+    model_file = 'text_cnn.model'
     sample_num = black_num + white_num
     train_data,train_labels,train_sequences = app_name_tag.encode_train_data("../train_data.txt", sample_num, word_index_dict, word_num, max_len)
     app_name_tag.print_data(train_data, train_labels, train_sequences)
     model = app_name_tag.text_cnn_model(train_sequences, train_labels,word_num, embedding_dim, max_len)
     need_pred_apk,need_pred_desc,need_pred_sequences = app_name_tag.load_need_pred_data("../need_pred_data.txt", word_index_dict, word_num, max_len)
+    #predict_result = app_name_tag.predict_with_model_file(model_file, need_pred_sequences)
     predict_result = app_name_tag.predict_new(model, need_pred_sequences)
     app_name_tag.save_predict_result("predict_result.txt", need_pred_apk, need_pred_desc, predict_result)
 
