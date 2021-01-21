@@ -59,7 +59,7 @@ class SelfAttention(Layer):
     #当需要save以及load_mode的模型中，保存有自己定义的layer时，务必需要实现get_config，把__init__里面的参数带到字典里面，不然会失败
     def get_config(self):
         config = {"output_dim":self.output_dim}
-        base_config = super(Mylayer, self).get_config()
+        base_config = super(SelfAttention, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
 class DenseEmbeddingTag:
