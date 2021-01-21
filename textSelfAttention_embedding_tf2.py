@@ -16,7 +16,7 @@ from keras import backend as K
 
 class SelfAttention(Layer):
 
-    def __init__(self, output_dim, **kwargs):
+    def __init__(self, output_dim, name="SelfAttention", **kwargs):
         self.output_dim = output_dim
         super(SelfAttention, self).__init__(**kwargs)
 
@@ -56,6 +56,11 @@ class SelfAttention(Layer):
 
         return (input_shape[0],input_shape[1],self.output_dim)
 
+    #当需要save以及load_mode的模型中，保存有自己定义的layer时，务必需要实现get_config，把__init__里面的参数带到字典里面，不然会失败
+    def get_config(self):
+        config = {"output_dim":self.output_dim}
+        base_config = super(Mylayer, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
 
 class DenseEmbeddingTag:
     def __init__(self, user_name):
@@ -191,27 +196,15 @@ class DenseEmbeddingTag:
         #model.compile(loss=loss, optimizer=opt, metrics=['accuracy'])
         
         model.fit(train_sequences, train_labels, batch_size = 512, epochs = 5)
+        
+        #模型保存
         model.save(model_file)
         return(model)
 
-
-
-    def model(self, train_sequences, train_labels, word_num, embedding_dim):
-        model = tf.keras.Sequential()
-        model.add(layers.Embedding(word_num, embedding_dim))
-        model.add(layers.GlobalAveragePooling1D())
-        model.add(layers.Dense(128, activation=tf.nn.relu))
-        model.add(layers.Dense(2, activation='softmax'))
-        #model.add(layers.Dense(1))
-        print(model.summary())
-
-        model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-        model.fit(train_sequences, train_labels, batch_size = 512, epochs = 10)
-
-        return model
     
     def predict_with_model_file(self, model_file, need_pred_sequences):
-        model = tf.keras.models.load_model(model_file)
+        #当加载的模型包含着自己定义的layer时，务必需要传入custom_objects这个字典参数，带上自己定义的layer的关键字
+        model = tf.keras.models.load_model(model_file, custom_objects={"SelfAttention":SelfAttention})
         pred_result = model.predict(need_pred_sequences)
         #print('predict_result: ', pred_result, pred_result.shape)
         print('predict_result.shape: ', pred_result.shape)
