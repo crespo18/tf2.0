@@ -13,7 +13,7 @@ import pandas as pd
 
 
 class Attention(Layer):
-    def __init__(self, step_dim, W_regularizer=None, b_regularizer=None, W_constraint=None, b_constraint=None, bias=None, **kwargs):
+    def __init__(self, step_dim, name="Attention", W_regularizer=None, b_regularizer=None, W_constraint=None, b_constraint=None, bias=None, **kwargs):
         print('attention __init__, step_dim: ', step_dim)
         self.supports_masking = True
         self.init = initializers.get('glorot_uniform')
@@ -87,6 +87,12 @@ class Attention(Layer):
         print('attention compute_output_shape: input_shape', input_shape, 'feature_dim: ', self.features_dim)
         return (input_shape[0], self.features_dim)
 
+    #如果需要保存的模型中，含有自己自定义的layer，必须要自己重写get_config函数，把需要的变量增加到字典中，这里增加的是__init__函数里面的第一个非默认的参数step_dim
+    #如果不重写get_config，在save或者load_model的时候会出错
+    def get_config(self):
+        config = {"step_dim":self.step_dim}
+        base_config = super(Attention, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
 
 class DenseEmbeddingTag:
     def __init__(self, user_name):
@@ -205,7 +211,7 @@ class DenseEmbeddingTag:
         print('pred_data len: ', len(need_pred_sequences))
         return([need_pred_apk, need_pred_desc, need_pred_sequences])
    
-    def text_bi_lstm_attention_model(self, train_sequences, train_labels, word_num, embedding_dim, max_len):
+    def text_bi_lstm_attention_model(self, train_sequences, train_labels, word_num, embedding_dim, max_len, model_file):
         input = Input((max_len,))
         embedding = layers.Embedding(word_num, embedding_dim, input_length=max_line_len)(input)
         x = layers.Bidirectional(layers.LSTM(128, return_sequences=True))(embedding)      #这里用的是双向LSTM，也可以直接用单向LSTM，layer.LSTM()，
@@ -221,7 +227,18 @@ class DenseEmbeddingTag:
 
         model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
         model.fit(train_sequences, train_labels, batch_size = 512, epochs = 5)
+        
+        #模型保存，这里务必要注意上面自定义的attention这个layer，必须要重写get_config函数
+        model.save(model_file)
         return(model)
+    
+    def predict_with_model_file(self, model_file, need_pred_sequences):
+        #由于模型里面包含着自己定义的attention这个layer，在load_model的时候必须要增加custom_objuect这个字典参数，传入Attention关键字
+        model = tf.keras.models.load_model(model_file, custom_objects={"Attention":Attention})
+        pred_result = model.predict(need_pred_sequences)
+        #print('predict_result: ', pred_result, pred_result.shape)
+        print('predict_result.shape: ', pred_result.shape)
+        return(pred_result)
 
     def predict_new(self, model, need_pred_sequences):
         pred_result = model.predict(need_pred_sequences)
@@ -253,14 +270,16 @@ if __name__ == '__main__':
     embedding_dim = 100
     max_len = 256
     max_line_len = 1000000
+    model_file = 'MODEL_FILE/bilstm_attention.model'
     sample_num = black_num + white_num
     train_data,train_labels,train_sequences = app_name_tag.encode_train_data("../train_data.txt", sample_num, word_index_dict, word_num, max_len)
     app_name_tag.print_data(train_data, train_labels, train_sequences)
     #train_labels = tf.keras.utils.to_categorical(train_labels)
     #train_labels = pd.get_dummies(train_labels)
-    model = app_name_tag.text_bi_lstm_attention_model(train_sequences, train_labels,word_num, embedding_dim, max_len)
+    model = app_name_tag.text_bi_lstm_attention_model(train_sequences, train_labels,word_num, embedding_dim, max_len, model_file)
     need_pred_apk,need_pred_desc,need_pred_sequences = app_name_tag.load_need_pred_data("../need_pred_data.txt", word_index_dict, word_num, max_len)
     predict_result = app_name_tag.predict_new(model, need_pred_sequences)
+    #predict_result = app_name_tag.predict_with_model_file(model_file, need_pred_sequences)
     app_name_tag.save_predict_result("predict_result.txt", need_pred_apk, need_pred_desc, predict_result)
 
 
