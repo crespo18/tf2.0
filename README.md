@@ -450,6 +450,7 @@ None
 https://zhuanlan.zhihu.com/p/86886620
 
 另外需要把模型保存为特定pb格式时，使用接口：tf.saved_model.save(model, 'PB_MODEL_FILE') #后面参数是文件夹
+因为用到TensorFlow Serving部署模型时，需要保存为pb格式
 方法可参考：https://zhuanlan.zhihu.com/p/146243327
 
 
