@@ -448,3 +448,9 @@ None
 
 保存以及加载模型时，包含有自己定义的layer时，会出现一些问题，解决方法可参考：
 https://zhuanlan.zhihu.com/p/86886620
+
+另外需要把模型保存为特定pb格式时，使用接口：tf.saved_model.save(model, 'PB_MODEL_FILE') #后面参数是文件夹
+方法可参考：https://zhuanlan.zhihu.com/p/146243327
+
+
+
