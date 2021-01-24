@@ -179,7 +179,7 @@ class DenseEmbeddingTag:
         print('pred_data len: ', len(need_pred_sequences))
         return([need_pred_apk, need_pred_desc, need_pred_sequences])
     
-    def text_self_attention_model(self, train_sequences, train_labels, word_num, embedding_dim, max_len, model_file):
+    def text_self_attention_model(self, train_sequences, train_labels, word_num, embedding_dim, max_len, model_file, pb_model_file):
         S_inputs = Input(shape=(max_len,), dtype='int32')
         embedding = layers.Embedding(word_num, embedding_dim)(S_inputs)
         O_seq = SelfAttention(embedding_dim)(embedding)
@@ -199,6 +199,9 @@ class DenseEmbeddingTag:
         
         #模型保存
         model.save(model_file)
+        
+        #如果需要利用TF Serving来部署模型的话，要保存为pb格式的model
+        tf.saved_model.save(model, pb_model_file)
         return(model)
 
     
@@ -263,12 +266,13 @@ if __name__ == '__main__':
     max_len = 256
     max_line_len = 1000000
     model_file = 'MODEL_FILE/lstm_self_attention.model'
+    pb_model_file = 'PB_MODEL_FILE'
     sample_num = black_num + white_num
     train_data,train_labels,train_sequences = app_name_tag.encode_train_data("../train_data.txt", sample_num, word_index_dict, word_num, max_len)
     app_name_tag.print_data(train_data, train_labels, train_sequences)
     #train_labels = tf.keras.utils.to_categorical(train_labels)
     #train_labels = pd.get_dummies(train_labels)                                                                      #转换为onehot类型，看情况用
-    model = app_name_tag.text_self_attention_model(train_sequences, train_labels,word_num, embedding_dim, max_len, model_file)
+    model = app_name_tag.text_self_attention_model(train_sequences, train_labels,word_num, embedding_dim, max_len, model_file, pb_model_file)
     need_pred_apk,need_pred_desc,need_pred_sequences = app_name_tag.load_need_pred_data("../need_pred_data.txt", word_index_dict, word_num, max_len)
     #predict_result = app_name_tag.predict_with_model_file(model_file, need_pred_sequences)
     predict_result = app_name_tag.predict_new(model, need_pred_sequences)
