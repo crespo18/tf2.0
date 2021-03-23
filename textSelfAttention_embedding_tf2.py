@@ -182,7 +182,8 @@ class DenseEmbeddingTag:
     def text_self_attention_model(self, train_sequences, train_labels, word_num, embedding_dim, max_len, model_file, pb_model_file):
         S_inputs = Input(shape=(max_len,), dtype='int32')
         embedding = layers.Embedding(word_num, embedding_dim)(S_inputs)
-        O_seq = SelfAttention(embedding_dim)(embedding)
+        x = layers.LSTM(128,return_sequences=True)(embedding)
+        O_seq = SelfAttention(embedding_dim)(x)
         O_seq = layers.GlobalAveragePooling1D()(O_seq)
         O_seq = layers.Dropout(0.5)(O_seq)
         outputs = layers.Dense(2, activation='softmax')(O_seq)
